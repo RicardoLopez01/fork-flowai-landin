@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
-const CHAT_API_URL = process.env.NEXT_PUBLIC_CHAT_API_URL || "http://localhost:3000";
+const CHAT_API_URL = process.env.NEXT_PUBLIC_CHAT_API_URL || "http://localhost:7071";
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -65,10 +65,17 @@ export default function ChatModal({ open, onClose, floating = false }: ChatModal
     setStreaming(true);
 
     try {
+      const history = messages
+        .filter((m) => m.content)
+        .map((m) => ({
+          role: m.role === "assistant" ? "model" : "user",
+          parts: [{ text: m.content }],
+        }));
+
       const res = await fetch(`${CHAT_API_URL}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify({ message: text, history }),
       });
 
       if (!res.ok || !res.body) {
